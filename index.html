@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BITE - Générateur JSON Ultime</title>
+    <title>BITE - Générateur JSON Libre</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0f172a; color: #f8fafc; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
@@ -11,8 +11,8 @@
         h2 { text-align: center; color: #38bdf8; margin-bottom: 20px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 6px; font-weight: 600; color: #94a3b8; }
-        input, select, textarea { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 8px; font-size: 14px; outline: none; }
-        input:focus, select:focus, textarea:focus { border-color: #38bdf8; }
+        input, textarea { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 8px; font-size: 14px; outline: none; }
+        input:focus, textarea:focus { border-color: #38bdf8; }
         textarea { resize: vertical; min-height: 100px; }
         .btn-gen { width: 100%; padding: 14px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
         .btn-gen:hover { background: #0369a1; }
@@ -25,16 +25,12 @@
 <body>
 
 <div class="container">
-    <h2>مولد ملفات JSON الآمن (BITE) 🍔</h2>
+    <h2>مولد ملفات JSON الحر (BITE) 🍔</h2>
     
     <div class="form-group">
-        <label>اختر الولاية أو اسم الملف:</label>
-        <select id="wilaya">
-            <option value="constantine">constantine.json</option>
-            <option value="skikda">skikda.json</option>
-            <option value="alger">alger.json</option>
-            <option value="oran">oran.json</option>
-        </select>
+        <label>اسم الولاية أو اسم الملف (أكتب بحروف صغيرة بدون مسافات):</label>
+        <input type="text" id="wilaya" placeholder="Ex: tipaza, setif, batna...">
+        <small>مثال: constantine أو skikda</small>
     </div>
 
     <div class="form-group">
@@ -58,10 +54,10 @@
         <small>كل رابط في سطر مستقل</small>
     </div>
 
-    <button class="btn-gen" onclick="generateAndShow()">توليد الكود الصحيح ⚙️</button>
+    <button class="btn-gen" onclick="generateAndShow()">توليد الملف ⚙️</button>
 
     <div class="output-box" id="outputBox">
-        <label>معاينة الملف الكامل (مع الأقواس الكبيرة []):</label>
+        <label>معاينة الملف الكامل:</label>
         <textarea id="jsonOutput" readonly style="height: 150px; font-family: monospace; color: #38bdf8;"></textarea>
         <button class="btn-download" onclick="downloadJSON()">تحميل ملف الـ JSON جاهز 📥</button>
     </div>
@@ -72,8 +68,14 @@
     let currentFileName = "file.json";
 
     function generateAndShow() {
-        const wilaya = document.getElementById('wilaya').value;
-        currentFileName = wilaya + ".json";
+        const wilayaInput = document.getElementById('wilaya').value.trim().toLowerCase();
+        
+        if(!wilayaInput) {
+            alert('يرجى كتابة اسم الولاية أولاً!');
+            return;
+        }
+
+        currentFileName = wilayaInput + ".json";
         
         const name = document.getElementById('name').value.trim();
         const phone = document.getElementById('phone').value.trim();
@@ -86,7 +88,7 @@
             .filter(url => url.length > 0);
 
         if(!name || !phone || !profileImg) {
-            alert('يرجى ملء الخانات الأساسية!');
+            alert('يرجى ملء الخانات الأساسية للمطعم!');
             return;
         }
 
@@ -97,7 +99,6 @@
             menuImages: menuImages
         };
 
-        // نضع المطعم داخل الأقواس الكبيرة مباشرة لضمان صحة الملف بنسبة 100%
         const fullArray = [newRestaurant];
         
         finalDataToDownload = JSON.stringify(fullArray, null, 4);
