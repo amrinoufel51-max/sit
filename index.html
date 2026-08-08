@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BITE - Générateur JSON Intelligent</title>
+    <title>BITE - Générateur JSON Ultime</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0f172a; color: #f8fafc; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
@@ -17,21 +17,23 @@
         .btn-gen { width: 100%; padding: 14px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
         .btn-gen:hover { background: #0369a1; }
         .output-box { margin-top: 25px; display: none; }
-        .btn-copy { width: 100%; padding: 10px; background: #22c55e; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 8px; }
-        .btn-copy:hover { background: #16a34a; }
+        .btn-download { width: 100%; padding: 12px; background: #22c55e; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 8px; }
+        .btn-download:hover { background: #16a34a; }
         small { color: #64748b; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>مولد كود المطاعم الآمن (BITE) 🍔</h2>
+    <h2>مولد ملفات JSON الآمن (BITE) 🍔</h2>
     
     <div class="form-group">
-        <label>أين تريد وضع هذا المطعم في الملف؟ (Position):</label>
-        <select id="position">
-            <option value="end">في الأخير (Dernier / Fin de liste)</option>
-            <option value="start">في البداية (Premier / Début de liste)</option>
+        <label>اختر الولاية أو اسم الملف:</label>
+        <select id="wilaya">
+            <option value="constantine">constantine.json</option>
+            <option value="skikda">skikda.json</option>
+            <option value="alger">alger.json</option>
+            <option value="oran">oran.json</option>
         </select>
     </div>
 
@@ -53,21 +55,26 @@
     <div class="form-group">
         <label>روابط صور المنيو (ضع كل رابط في سطر جديد):</label>
         <textarea id="menuImages" placeholder="https://link1.com/img1.jpg&#10;https://link2.com/img2.jpg"></textarea>
-        <small>قم بلصق رابط كل صورة في سطر مستقل</small>
+        <small>كل رابط في سطر مستقل</small>
     </div>
 
-    <button class="btn-gen" onclick="generateJSON()">توليد الكود الآمن (Générer)</button>
+    <button class="btn-gen" onclick="generateAndShow()">توليد الكود الصحيح ⚙️</button>
 
     <div class="output-box" id="outputBox">
-        <label>الكود الناتِج (انسخه وضعه في المكان المناسب):</label>
+        <label>معاينة الملف الكامل (مع الأقواس الكبيرة []):</label>
         <textarea id="jsonOutput" readonly style="height: 150px; font-family: monospace; color: #38bdf8;"></textarea>
-        <button class="btn-copy" onclick="copyJSON()">نسخ الكود 📋</button>
+        <button class="btn-download" onclick="downloadJSON()">تحميل ملف الـ JSON جاهز 📥</button>
     </div>
 </div>
 
 <script>
-    function generateJSON() {
-        const position = document.getElementById('position').value;
+    let finalDataToDownload = "";
+    let currentFileName = "file.json";
+
+    function generateAndShow() {
+        const wilaya = document.getElementById('wilaya').value;
+        currentFileName = wilaya + ".json";
+        
         const name = document.getElementById('name').value.trim();
         const phone = document.getElementById('phone').value.trim();
         const profileImg = document.getElementById('profileImg').value.trim();
@@ -79,38 +86,36 @@
             .filter(url => url.length > 0);
 
         if(!name || !phone || !profileImg) {
-            alert('يرجى ملء جميع الخانات الأساسية!');
+            alert('يرجى ملء الخانات الأساسية!');
             return;
         }
 
-        const restaurantData = {
+        const newRestaurant = {
             name: name,
             profileImg: profileImg,
             phone: phone,
             menuImages: menuImages
         };
 
-        // تحويل الكائن إلى نص منسق
-        let formatted = JSON.stringify(restaurantData, null, 4);
-
-        // إضافة الفاصلة بدقة بناءً على مكان المطعم لكي لا يحدث أي خطأ أبداً
-        if (position === 'end') {
-            // إذا كان في الأخير، نضيف `,` في البداية ليلتصق بالمطعم الذي قبله
-            formatted = ",\n" + formatted;
-        } else {
-            // إذا كان في البداية، نضيف `,` في النهاية ليلتصق بالمطعم الذي بعده
-            formatted = formatted + ",";
-        }
+        // نضع المطعم داخل الأقواس الكبيرة مباشرة لضمان صحة الملف بنسبة 100%
+        const fullArray = [newRestaurant];
         
-        document.getElementById('jsonOutput').value = formatted;
+        finalDataToDownload = JSON.stringify(fullArray, null, 4);
+        
+        document.getElementById('jsonOutput').value = finalDataToDownload;
         document.getElementById('outputBox').style.display = 'block';
     }
 
-    function copyJSON() {
-        const copyText = document.getElementById("jsonOutput");
-        copyText.select();
-        document.execCommand("copy");
-        alert("تم النسخ بنجاح!");
+    function downloadJSON() {
+        const blob = new Blob([finalDataToDownload], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = currentFileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
 </script>
 
