@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BITE - Générateur JSON Intelligent & Direct</title>
+    <title>BITE - Local Generator (Paths HD)</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0f172a; color: #f8fafc; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
@@ -12,7 +12,6 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 6px; font-weight: 600; color: #94a3b8; }
         input, select, textarea { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 8px; font-size: 14px; outline: none; }
-        input[type="file"] { cursor: pointer; }
         input:focus, select:focus, textarea:focus { border-color: #38bdf8; }
         textarea { resize: vertical; min-height: 90px; font-family: monospace; }
         .btn-gen { width: 100%; padding: 14px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
@@ -26,20 +25,20 @@
 <body>
 
 <div class="container">
-    <h2>مولد المطاعم الذكي والمباشر (BITE) 🍔</h2>
+    <h2>مولد المطاعم الاحترافي (BITE) 🍔</h2>
     
     <div class="form-group">
-        <label>اسم الولاية (اسم الملف):</label>
-        <input type="text" id="wilaya" placeholder="Ex: constantine, skikda">
+        <label>اسم الولاية (اسم الملف النهائي):</label>
+        <input type="text" id="wilaya" placeholder="Ex: constantine">
     </div>
 
     <div class="form-group">
-        <label>الكود القديم للملف (إن وجدت مطاعم سابقة، اتركه فارغاً إذا كان مطعمك الأول):</label>
-        <textarea id="oldJson" placeholder='[&#10;  {&#10;    "name": "مطعم قديم"...&#10;  }&#10;]' style="height: 80px;"></textarea>
+        <label>الكود القديم للملف (إن وجدت مطاعم سابقة، اتركه فارغاً إذا كان الأول):</label>
+        <textarea id="oldJson" placeholder='[&#10;  {&#10;    "name": "مطعم قديم"...&#10;  }&#10;]' style="height: 70px;"></textarea>
     </div>
 
     <div class="form-group">
-        <label>أين تريد إضافة هذا المطعم الجديد؟ (Position):</label>
+        <label>موقع المطعم الجديد في القائمة:</label>
         <select id="position">
             <option value="end">في الأخير (Fin de la liste)</option>
             <option value="start">في البداية (Début de la liste)</option>
@@ -49,30 +48,30 @@
     <hr style="border-color: #334155; margin: 20px 0;">
 
     <div class="form-group">
-        <label>اسم المطعم الجديد:</label>
-        <input type="text" id="name" placeholder="Ex: Kebdati Hut">
+        <label>اسم المطعم:</label>
+        <input type="text" id="name" placeholder="Ex: Tacos King">
     </div>
 
     <div class="form-group">
         <label>رقم الهاتف:</label>
-        <input type="text" id="phone" placeholder="Ex: 031921122">
+        <input type="text" id="phone" placeholder="Ex: 0550123456">
     </div>
 
     <div class="form-group">
-        <label>صورة البروفايل (Photo de Profil):</label>
-        <input type="file" id="profileFile" accept="image/*">
+        <label>مسار صورة البروفايل (Logo Path):</label>
+        <input type="text" id="profilePath" placeholder="Ex: images/logos/tacos.jpg">
     </div>
 
     <div class="form-group">
-        <label>صور المنيو (يمكنك اختيار عدة صور دفعة واحدة بجودة HD):</label>
-        <input type="file" id="menuFiles" accept="image/*" multiple>
-        <div class="note">⚠️ المولد سيقوم بتحويل الصور ومعالجتها بدقة HD واضحة تماماً للتحميل المباشر!</div>
+        <label>مسارات صور المنيو (كل مسار في سطر):</label>
+        <textarea id="menuPaths" placeholder="images/menus/tacos_page1.jpg&#10;images/menus/tacos_page2.jpg"></textarea>
+        <div class="note">⚠️ اكتب مسار كل صورة منيو رفعتها في غيت هب، وكل صورة في سطر مستقل لضمان جودة HD كاملة ومباشرة!</div>
     </div>
 
-    <button class="btn-gen" onclick="addRestaurant()">دمج وإنشاء الملف ⚙️</button>
+    <button class="btn-gen" onclick="addRestaurant()">توليد الكود ⚙️</button>
 
     <div class="output-box" id="outputBox">
-        <label>معاينة الملف النهائي (جاهز وآمن):</label>
+        <label>معاينة الملف النهائي:</label>
         <textarea id="jsonOutput" readonly style="height: 150px; color: #38bdf8;"></textarea>
         <button class="btn-download" onclick="downloadJSON()">تحميل ملف الـ JSON النهائي 📥</button>
     </div>
@@ -82,49 +81,7 @@
     let finalDataToDownload = "";
     let currentFileName = "file.json";
 
-    // دالة محسنة لمعالجة وتحويل الصورة إلى Base64 بجودة HD صافية وواضحة
-    function processImageToHD(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (event) => {
-                const img = new Image();
-                img.src = event.target.result;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    let width = img.width;
-                    let height = img.height;
-
-                    // تحديد أقصى أبعاد للسواني لضمان الوضوح العالي مع تجنب الحجم المبالغ فيه
-                    const MAX_DIMENSION = 1600; 
-                    if (width > height) {
-                        if (width > MAX_DIMENSION) {
-                            height *= MAX_DIMENSION / width;
-                            width = MAX_DIMENSION;
-                        }
-                    } else {
-                        if (height > MAX_DIMENSION) {
-                            width *= MAX_DIMENSION / height;
-                            height = MAX_DIMENSION;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    // استخراج الصورة بجودة عالية 92% لتكون حادة وواضحة جداً للقراءة والتحميل
-                    const hdBase64 = canvas.toDataURL('image/jpeg', 0.92);
-                    resolve(hdBase64);
-                };
-                img.onerror = (error) => reject(error);
-            };
-            reader.onerror = (error) => reject(error);
-        });
-    }
-
-    async function addRestaurant() {
+    function addRestaurant() {
         const wilayaInput = document.getElementById('wilaya').value.trim().toLowerCase();
         if(!wilayaInput) {
             alert('يرجى كتابة اسم الولاية أولاً!');
@@ -134,8 +91,8 @@
 
         const name = document.getElementById('name').value.trim();
         const phone = document.getElementById('phone').value.trim();
-        const profileInput = document.getElementById('profileFile');
-        const menuInput = document.getElementById('menuFiles');
+        const profilePath = document.getElementById('profilePath').value.trim();
+        const menuPathsText = document.getElementById('menuPaths').value.trim();
         const position = document.getElementById('position').value;
         const oldJsonText = document.getElementById('oldJson').value.trim();
 
@@ -144,62 +101,42 @@
             return;
         }
 
-        const outputBox = document.getElementById('jsonOutput');
-        outputBox.value = "جاري معالجة الصور بدقة HD ودمج البيانات... ⏳";
-        document.getElementById('outputBox').style.display = 'block';
-
-        try {
-            // معالجة صورة البروفايل بدقة عالية
-            let profileImgUrl = "";
-            if (profileInput.files.length > 0) {
-                profileImgUrl = await processImageToHD(profileInput.files[0]);
-            }
-
-            // معالجة صور المنيو المرفوعة بدقة HD
-            let menuImagesList = [];
-            for (let i = 0; i < menuInput.files.length; i++) {
-                let hdBase64Img = await processImageToHD(menuInput.files[i]);
-                menuImagesList.push(hdBase64Img);
-            }
-
-            const newRest = {
-                name: name,
-                profileImg: profileImgUrl,
-                phone: phone,
-                menuImages: menuImagesList
-            };
-
-            let restaurantsList = [];
-
-            // قراءة الكود القديم إن وجد ودمجه بأمان
-            if (oldJsonText !== "") {
-                try {
-                    restaurantsList = JSON.parse(oldJsonText);
-                    if (!Array.isArray(restaurantsList)) {
-                        restaurantsList = [];
-                    }
-                } catch (e) {
-                    alert('خطأ في تنسيق الكود القديم المكتوب! تأكد من صحته.');
-                    document.getElementById('outputBox').style.display = 'none';
-                    return;
-                }
-            }
-
-            // إدراج المطعم الجديد حسب الموقع المحدد
-            if (position === 'start') {
-                restaurantsList.unshift(newRest);
-            } else {
-                restaurantsList.push(newRest);
-            }
-
-            finalDataToDownload = JSON.stringify(restaurantsList, null, 4);
-            outputBox.value = finalDataToDownload;
-
-        } catch (error) {
-            alert('حدث خطأ أثناء معالجة الصور.');
-            console.error(error);
-            document.getElementById('outputBox').style.display = 'none';
+        // تحويل أسطر صور المنيو إلى مصفوفة (Array)
+        let menuImagesList = [];
+        if (menuPathsText !== "") {
+            menuImagesList = menuPathsText.split('\n').map(item => item.trim()).filter(item => item !== "");
         }
+
+        const newRest = {
+            name: name,
+            profileImg: profilePath,
+            phone: phone,
+            menuImages: menuImagesList
+        };
+
+        let restaurantsList = [];
+
+        if (oldJsonText !== "") {
+            try {
+                restaurantsList = JSON.parse(oldJsonText);
+                if (!Array.isArray(restaurantsList)) restaurantsList = [];
+            } catch (e) {
+                alert('خطأ في تنسيق الكود القديم المكتوب! تأكد من صحته.');
+                return;
+            }
+        }
+
+        if (position === 'start') {
+            restaurantsList.unshift(newRest);
+        } else {
+            restaurantsList.push(newRest);
+        }
+
+        finalDataToDownload = JSON.stringify(restaurantsList, null, 4);
+        
+        const outputBox = document.getElementById('jsonOutput');
+        outputBox.value = finalDataToDownload;
+        document.getElementById('outputBox').style.display = 'block';
     }
 
     function downloadJSON() {
