@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BITE - Générateur JSON Libre</title>
+    <title>BITE - Générateur JSON Intelligent & Sécurisé</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0f172a; color: #f8fafc; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
@@ -11,9 +11,9 @@
         h2 { text-align: center; color: #38bdf8; margin-bottom: 20px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 6px; font-weight: 600; color: #94a3b8; }
-        input, textarea { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 8px; font-size: 14px; outline: none; }
-        input:focus, textarea:focus { border-color: #38bdf8; }
-        textarea { resize: vertical; min-height: 100px; }
+        input, select, textarea { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 8px; font-size: 14px; outline: none; }
+        input:focus, select:focus, textarea:focus { border-color: #38bdf8; }
+        textarea { resize: vertical; min-height: 90px; font-family: monospace; }
         .btn-gen { width: 100%; padding: 14px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
         .btn-gen:hover { background: #0369a1; }
         .output-box { margin-top: 25px; display: none; }
@@ -25,41 +25,54 @@
 <body>
 
 <div class="container">
-    <h2>مولد ملفات JSON الحر (BITE) 🍔</h2>
+    <h2>مولد المطاعم الذكي (BITE) 🍔</h2>
     
     <div class="form-group">
-        <label>اسم الولاية أو اسم الملف (أكتب بحروف صغيرة بدون مسافات):</label>
-        <input type="text" id="wilaya" placeholder="Ex: tipaza, setif, batna...">
-        <small>مثال: constantine أو skikda</small>
+        <label>اسم الولاية (اسم الملف):</label>
+        <input type="text" id="wilaya" placeholder="Ex: constantine, skikda">
     </div>
 
     <div class="form-group">
-        <label>اسم المطعم (Nom du restaurant):</label>
+        <label>الكود القديم للملف (إن وجدت مطاعم سابقة، اتركه فارغاً إذا كان مطعمك الأول):</label>
+        <textarea id="oldJson" placeholder='[&#10;  {&#10;    "name": "مطعم قديم"...&#10;  }&#10;]' style="height: 80px;"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>أين تريد إضافة هذا المطعم الجديد؟ (Position):</label>
+        <select id="position">
+            <option value="end">في الأخير (Fin de la liste)</option>
+            <option value="start">في البداية (Début de la liste)</option>
+        </select>
+    </div>
+
+    <hr style="border-color: #334155; margin: 20px 0;">
+
+    <div class="form-group">
+        <label>اسم المطعم الجديد:</label>
         <input type="text" id="name" placeholder="Ex: Kebdati Hut">
     </div>
 
     <div class="form-group">
-        <label>رقم الهاتف (Téléphone):</label>
+        <label>رقم الهاتف:</label>
         <input type="text" id="phone" placeholder="Ex: 031921122">
     </div>
 
     <div class="form-group">
         <label>رابط صورة البروفايل (Photo de Profil):</label>
-        <input type="text" id="profileImg" placeholder="https://images.unsplash.com/...">
+        <input type="text" id="profileImg" placeholder="https://...">
     </div>
 
     <div class="form-group">
-        <label>روابط صور المنيو (ضع كل رابط في سطر جديد):</label>
-        <textarea id="menuImages" placeholder="https://link1.com/img1.jpg&#10;https://link2.com/img2.jpg"></textarea>
-        <small>كل رابط في سطر مستقل</small>
+        <label>روابط صور المنيو (كل رابط في سطر جديد):</label>
+        <textarea id="menuImages" placeholder="https://link1.com&#10;https://link2.com"></textarea>
     </div>
 
-    <button class="btn-gen" onclick="generateAndShow()">توليد الملف ⚙️</button>
+    <button class="btn-gen" onclick="addRestaurant()">دمج وإنشاء الملف ⚙️</button>
 
     <div class="output-box" id="outputBox">
-        <label>معاينة الملف الكامل:</label>
-        <textarea id="jsonOutput" readonly style="height: 150px; font-family: monospace; color: #38bdf8;"></textarea>
-        <button class="btn-download" onclick="downloadJSON()">تحميل ملف الـ JSON جاهز 📥</button>
+        <label>معاينة الملف النهائي (جاهز وآمن):</label>
+        <textarea id="jsonOutput" readonly style="height: 150px; color: #38bdf8;"></textarea>
+        <button class="btn-download" onclick="downloadJSON()">تحميل ملف الـ JSON النهائي 📥</button>
     </div>
 </div>
 
@@ -67,42 +80,63 @@
     let finalDataToDownload = "";
     let currentFileName = "file.json";
 
-    function generateAndShow() {
+    function addRestaurant() {
         const wilayaInput = document.getElementById('wilaya').value.trim().toLowerCase();
-        
         if(!wilayaInput) {
             alert('يرجى كتابة اسم الولاية أولاً!');
             return;
         }
-
         currentFileName = wilayaInput + ".json";
-        
+
         const name = document.getElementById('name').value.trim();
         const phone = document.getElementById('phone').value.trim();
         const profileImg = document.getElementById('profileImg').value.trim();
         const menuRaw = document.getElementById('menuImages').value;
+        const position = document.getElementById('position').value;
+        const oldJsonText = document.getElementById('oldJson').value.trim();
+
+        if(!name || !phone || !profileImg) {
+            alert('يرجى ملء خانات المطعم الجديد الأساسية!');
+            return;
+        }
 
         const menuImages = menuRaw
             .split('\n')
             .map(url => url.trim())
             .filter(url => url.length > 0);
 
-        if(!name || !phone || !profileImg) {
-            alert('يرجى ملء الخانات الأساسية للمطعم!');
-            return;
-        }
-
-        const newRestaurant = {
+        const newRest = {
             name: name,
             profileImg: profileImg,
             phone: phone,
             menuImages: menuImages
         };
 
-        const fullArray = [newRestaurant];
-        
-        finalDataToDownload = JSON.stringify(fullArray, null, 4);
-        
+        let restaurantsList = [];
+
+        // إذا كان هناك مطاعم قديمة، نقوم بقراءتها وتأمينها
+        if (oldJsonText !== "") {
+            try {
+                restaurantsList = JSON.parse(oldJsonText);
+                if (!Array.isArray(restaurantsList)) {
+                    restaurantsList = [];
+                }
+            } catch (e) {
+                alert('خطأ في تنسيق الكود القديم المكتوب! تأكد من صحته.');
+                return;
+            }
+        }
+
+        // إضافة المطعم الجديد في المكان الذي تحدده أنت بدقة
+        if (position === 'start') {
+            restaurantsList.unshift(newRest); // في البداية
+        } else {
+            restaurantsList.push(newRest);    // في الأخير
+        }
+
+        // تحويل القائمة كلها إلى JSON منظم وجميل
+        finalDataToDownload = JSON.stringify(restaurantsList, null, 4);
+
         document.getElementById('jsonOutput').value = finalDataToDownload;
         document.getElementById('outputBox').style.display = 'block';
     }
