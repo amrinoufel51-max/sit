@@ -1,4 +1,89 @@
-if(!wilayaInput) {
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BITE - Local Generator (Paths HD)</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 16px; width: 100%; max-width: 650px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        h2 { text-align: center; color: #38bdf8; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; color: #94a3b8; }
+        input, select, textarea { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 8px; font-size: 14px; outline: none; }
+        input:focus, select:focus, textarea:focus { border-color: #38bdf8; }
+        textarea { resize: vertical; min-height: 90px; font-family: monospace; }
+        .btn-gen { width: 100%; padding: 14px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        .btn-gen:hover { background: #0369a1; }
+        .output-box { margin-top: 25px; display: none; }
+        .btn-download { width: 100%; padding: 12px; background: #22c55e; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 8px; }
+        .btn-download:hover { background: #16a34a; }
+        .note { color: #f59e0b; font-size: 12px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>مولد المطاعم الاحترافي (BITE) 🍔</h2>
+    
+    <div class="form-group">
+        <label>اسم الولاية (اسم الملف النهائي):</label>
+        <input type="text" id="wilaya" placeholder="Ex: constantine">
+    </div>
+
+    <div class="form-group">
+        <label>الكود القديم للملف (إن وجدت مطاعم سابقة، اتركه فارغاً إذا كان الأول):</label>
+        <textarea id="oldJson" placeholder='[&#10;  {&#10;    "name": "مطعم قديم"...&#10;  }&#10;]' style="height: 70px;"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>موقع المطعم الجديد في القائمة:</label>
+        <select id="position">
+            <option value="end">في الأخير (Fin de la liste)</option>
+            <option value="start">في البداية (Début de la liste)</option>
+        </select>
+    </div>
+
+    <hr style="border-color: #334155; margin: 20px 0;">
+
+    <div class="form-group">
+        <label>اسم المطعم:</label>
+        <input type="text" id="name" placeholder="Ex: Tacos King">
+    </div>
+
+    <div class="form-group">
+        <label>رقم الهاتف:</label>
+        <input type="text" id="phone" placeholder="Ex: 0550123456">
+    </div>
+
+    <div class="form-group">
+        <label>مسار صورة البروفايل (Logo Path):</label>
+        <input type="text" id="profilePath" placeholder="Ex: images/logos/tacos.jpg">
+    </div>
+
+    <div class="form-group">
+        <label>مسارات صور المنيو (كل مسار في سطر):</label>
+        <textarea id="menuPaths" placeholder="images/menus/tacos_page1.jpg&#10;images/menus/tacos_page2.jpg"></textarea>
+        <div class="note">⚠️ اكتب مسار كل صورة منيو رفعتها في غيت هب، وكل صورة في سطر مستقل لضمان جودة HD كاملة ومباشرة!</div>
+    </div>
+
+    <button class="btn-gen" onclick="addRestaurant()">توليد الكود ⚙️</button>
+
+    <div class="output-box" id="outputBox">
+        <label>معاينة الملف النهائي:</label>
+        <textarea id="jsonOutput" readonly style="height: 150px; color: #38bdf8;"></textarea>
+        <button class="btn-download" onclick="downloadJSON()">تحميل ملف الـ JSON النهائي 📥</button>
+    </div>
+</div>
+
+<script>
+    let finalDataToDownload = "";
+    let currentFileName = "file.json";
+
+    function addRestaurant() {
+        const wilayaInput = document.getElementById('wilaya').value.trim().toLowerCase();
+        if(!wilayaInput) {
             alert('يرجى كتابة اسم الولاية أولاً!');
             return;
         }
