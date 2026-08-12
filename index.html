@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BITE - Local Generator (Paths HD)</title>
+    <title>BITE - Local Generator (Base64 Direct)</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0f172a; color: #f8fafc; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
@@ -12,6 +12,7 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 6px; font-weight: 600; color: #94a3b8; }
         input, select, textarea { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 8px; font-size: 14px; outline: none; }
+        input[type="file"] { padding: 8px; cursor: pointer; }
         input:focus, select:focus, textarea:focus { border-color: #38bdf8; }
         textarea { resize: vertical; min-height: 90px; font-family: monospace; }
         .btn-gen { width: 100%; padding: 14px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
@@ -58,14 +59,14 @@
     </div>
 
     <div class="form-group">
-        <label>مسار صورة البروفايل (Logo Path):</label>
-        <input type="text" id="profilePath" placeholder="Ex: images/logos/tacos.jpg">
+        <label>صورة بروفايل المطعم (Logo):</label>
+        <input type="file" id="profileImgFile" accept="image/*">
     </div>
 
     <div class="form-group">
-        <label>مسارات صور المنيو (كل مسار في سطر):</label>
-        <textarea id="menuPaths" placeholder="images/menus/tacos_page1.jpg&#10;images/menus/tacos_page2.jpg"></textarea>
-        <div class="note">⚠️ اكتب مسار كل صورة منيو رفعتها في غيت هب، وكل صورة في سطر مستقل لضمان جودة HD كاملة ومباشرة!</div>
+        <label>صور المنيو (يمكنك اختيار عدة صور دفعة واحدة من هاتفك):</label>
+        <input type="file" id="menuImgFiles" accept="image/*" multiple>
+        <div class="note">⚠️ اختر صور المنيو مباشرة من هاتفك، وسيتم تحويلها وتضمينها تلقائياً داخل الملف!</div>
     </div>
 
     <button class="btn-gen" onclick="addRestaurant()">توليد الكود ⚙️</button>
@@ -81,7 +82,17 @@
     let finalDataToDownload = "";
     let currentFileName = "file.json";
 
-    function addRestaurant() {
+    // دالة مساعد لتحويل الملف إلى Base64
+    function convertFileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    async function addRestaurant() {
         const wilayaInput = document.getElementById('wilaya').value.trim().toLowerCase();
         if(!wilayaInput) {
             alert('يرجى كتابة اسم الولاية أولاً!');
@@ -91,8 +102,6 @@
 
         const name = document.getElementById('name').value.trim();
         const phone = document.getElementById('phone').value.trim();
-        const profilePath = document.getElementById('profilePath').value.trim();
-        const menuPathsText = document.getElementById('menuPaths').value.trim();
         const position = document.getElementById('position').value;
         const oldJsonText = document.getElementById('oldJson').value.trim();
 
@@ -101,15 +110,26 @@
             return;
         }
 
-        // تحويل أسطر صور المنيو إلى مصفوفة (Array)
+        // معالجة صورة البروفايل
+        let profileBase64 = "";
+        const profileFile = document.getElementById('profileImgFile').files[0];
+        if (profileFile) {
+            profileBase64 = await convertFileToBase64(profileFile);
+        }
+
+        // معالجة صور المنيو المتعددة
         let menuImagesList = [];
-        if (menuPathsText !== "") {
-            menuImagesList = menuPathsText.split('\n').map(item => item.trim()).filter(item => item !== "");
+        const menuFiles = document.getElementById('menuImgFiles').files;
+        if (menuFiles.length > 0) {
+            for (let i = 0; i < menuFiles.length; i++) {
+                const base64String = await convertFileToBase64(menuFiles[i]);
+                menuImagesList.push(base64String);
+            }
         }
 
         const newRest = {
             name: name,
-            profileImg: profilePath,
+            profileImg: profileBase64,
             phone: phone,
             menuImages: menuImagesList
         };
